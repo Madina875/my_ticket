@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -10,7 +11,7 @@ import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { AdminService } from '../admin/admin.service';
 import { LoginAdminDto } from '../admin/dto/login-admin.dto';
 import * as bcrypt from 'bcrypt';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -90,5 +91,34 @@ export class AuthService {
 
     res.clearCookie('refresh_token');
     res.json({ message: 'Admin signed out successfully!' });
+  }
+
+  async refreshToken(id: string, req: Request, res: Response) {
+    const token = req.cookies?.refreshToken;
+    if (!token) {
+      throw new BadRequestException('Token required');
+    }
+
+    const admin = await this.adminService.findOne(id);
+    if (!admin || !admin.hashed_refresh_token) {
+      throw new UnauthorizedException('Invalid admin or token');
+    }
+
+    const isMatch = await bcrypt.compare(token, admin.hashed_refresh_token);
+    if (!isMatch) {
+      throw new UnauthorizedException('Refresh token invalid');
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await this.generateTokens(admin);
+
+    admin.hashed_refresh_token = await bcrypt.hash(newRefreshToken, 7);
+    await admin.save();
+
+    res.cookie('refreshToken', newRefreshToken, {
+      maxAge: +process.env.COOKIE_TIME!,
+      httpOnly: true,
+    });
+    return res.json({ message: 'Token refreshed successfully' });
   }
 }

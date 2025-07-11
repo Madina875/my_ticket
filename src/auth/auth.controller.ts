@@ -1,15 +1,17 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Post,
+  Req,
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { LoginAdminDto } from '../admin/dto/login-admin.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -31,5 +33,14 @@ export class AuthController {
   @Post('logout/:id')
   async signout(@Param('id') id: string, @Res() res: Response) {
     return this.authService.logout(id, res);
+  }
+
+  @Get('refresh/:id')
+  async refreshToken(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.authService.refreshToken(id, req, res);
   }
 }
