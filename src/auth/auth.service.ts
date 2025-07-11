@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AdminDocument } from '../admin/schemas/admin.schema';
@@ -76,5 +77,18 @@ export class AuthService {
       httpOnly: true,
     });
     return { adminId: admin._id, accessToken };
+  }
+
+  async logout(id: string, res: Response) {
+    const admin = await this.adminService.findOne(id);
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    admin.hashed_refresh_token = null;
+    await admin.save();
+
+    res.clearCookie('refresh_token');
+    res.json({ message: 'Admin signed out successfully!' });
   }
 }

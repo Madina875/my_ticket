@@ -28,8 +28,8 @@ export class Admin {
   @Prop({ default: false })
   is_creator: boolean;
 
-  @Prop()
-  hashed_refresh_token: string;
+  @Prop({ type: String, required: false, default: null })
+  hashed_refresh_token: string | null;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);

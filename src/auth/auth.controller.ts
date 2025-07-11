@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
 import { LoginAdminDto } from '../admin/dto/login-admin.dto';
@@ -19,5 +26,10 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.login(loginAdminDto, res);
+  }
+
+  @Post('logout/:id')
+  async signout(@Param('id') id: string, @Res() res: Response) {
+    return this.authService.logout(id, res);
   }
 }
